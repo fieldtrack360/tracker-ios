@@ -32,7 +32,7 @@ https://github.com/fieldtrack360/tracker-ios
 Or in a `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/fieldtrack360/tracker-ios", from: "1.0.0")
+.package(url: "https://github.com/fieldtrack360/tracker-ios", from: "1.0.1")
 ```
 
 Add only the products you need. Because these are binary targets, each product
@@ -785,6 +785,82 @@ func configureSync(endpoint: URL, token: String) async {
 Uploading is not tracking: no failure here stops capture or closes a session.
 The single exception is opt-in and off by default —
 `SyncConfig.stopTrackingOnAuthExpiry`.
+
+### The request body
+
+Two levels: `location` carries the batch, and anything you put in
+`SyncConfig.extraParams` sits beside it.
+
+```json
+{
+  "company_id": 42,
+  "device_label": "van-7",
+  "location": [
+    {
+      "uuid": "u-1",
+      "time": 1787206701455,
+      "local_date": "2026-08-24",
+      "time_zone": "Asia/Kolkata",
+      "latitude": 23.113114,
+      "longitude": 72.538084,
+      "accuracy": 4.98,
+      "movementSpeed": 4.5,
+      "hasSpeed": true,
+      "hasBearing": true,
+      "activity_status": "gps@moving",
+      "detected_activity_type": "inVehicle",
+      "detected_activity_start_time": 1,
+      "battery_percentage": "75",
+      "is_charging": true,
+      "is_show_pin": "No",
+      "is_mock": false,
+      "provider": {
+        "network": false,
+        "gps": true,
+        "enabled": true,
+        "status": 3,
+        "accuracyAuthorization": 0,
+        "airplane": false
+      }
+    }
+  ]
+}
+```
+
+**Extra params** are for what belongs to the *request* rather than to any point —
+a tenant id, a device label, an API version — and that a header cannot carry
+because your endpoint reads its body:
+
+```swift
+config.extraParams = [
+    "company_id": .int(42),
+    "device_label": .string("van-7"),
+]
+```
+
+`SyncValue` is a closed set — `.string`, `.int`, `.double`, `.bool`, `.null`,
+`.array`, `.object` — so anything you can build is guaranteed to encode. A
+payload that failed to encode would be a batch retrying forever inside a
+background task. `location` is refused: it is the batch itself, and a host that
+overwrote it would have its points marked uploaded having never been sent.
+
+**`provider` is an object**, in the same shape both SDKs send, so one backend
+reads either. Two fields cannot mean on iOS quite what they mean on Android:
+
+| Field | On iOS |
+|---|---|
+| `gps` / `network` | iOS exposes no provider identity, so this uses the pipeline's own rule: a fix with neither hardware speed nor course is network positioning (EC-32). The same test the acceptance pipeline gates on |
+| `enabled` | Location Services, the device-wide switch |
+| `status` | `0` not determined, `1` restricted, `2` denied, `3` always, `4` when-in-use |
+| `accuracyAuthorization` | `0` full, `1` reduced |
+| `airplane` | **There is no public API for the switch.** Derived from the network path having no usable interface, which is what airplane mode looks like from inside the sandbox — and also what no coverage with Wi-Fi off looks like. Read it as "the radios are unreachable" |
+
+The provider snapshot is read **once per drain**, so it describes the device at
+upload rather than at capture. A batch queued while offline can be hours old.
+
+**`is_charging` is `Bool?`.** `null` on the simulator, on a Mac, and on a device
+with battery monitoring off — `null` is not `false`, and the key is always
+present so the object's shape never depends on the data.
 
 ### Surviving a cold start
 

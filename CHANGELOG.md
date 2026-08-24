@@ -4,6 +4,67 @@ All notable changes to the Tracker iOS SDK. Newest first.
 
 ---
 
+## 1.0.1
+
+The upload payload gains the fields a cross-platform backend needs, and three
+one-shot failures stop calling themselves timeouts.
+
+### Changed — action required
+
+- **`provider` in the upload payload is an object, not a string.** It was
+  `"gps"`; it is now `{network, gps, enabled, status, accuracyAuthorization,
+  airplane}` — the same shape both SDKs send, so one backend reads either. **A
+  backend reading `provider` as a string needs updating.** `activity_status`
+  still carries the string form (`"gps@moving"`), so anything parsing it there
+  is untouched. On iOS `gps`/`network` come from the pipeline's own rule — a fix
+  with neither hardware speed nor course is network positioning — and `airplane`
+  is derived from the network path having no usable interface, because iOS
+  exposes no API for the switch.
+- **`getCurrentLocation(feedIngestor:)` now defaults to `true`.** The one-shot
+  fix is judged by the pipeline and stored as a point on the session that is
+  recording, where it previously came back and touched nothing. A screen that
+  only wants to read the position — a map centre, an address lookup — must now
+  pass `feedIngestor: false`, or it will add a point to the user's track every
+  time it opens. With no session open the flag makes no difference. Neither
+  setting bypasses the gates: a fed fix cannot inject an unvalidated point.
+
+### Added
+
+- **`SyncConfig.extraParams` merges host fields into every request body.** For
+  what belongs to the request rather than to any point — a tenant id, a device
+  label, an API version — and that a header cannot carry because the endpoint
+  reads its body. Values are a closed `SyncValue` set, so anything a host can
+  build is guaranteed to encode; a payload that failed to encode would be a
+  batch retrying forever inside a background task. The key `location` is
+  refused, since it is the batch.
+- **`is_charging` travels with each point.** The charge state was already
+  captured and stored and simply never reached the wire. `Bool?`: `null` on the
+  simulator, on a Mac, and with battery monitoring off — `null` is not `false`,
+  and the key is always present so the object's shape never depends on the data.
+- **`geofenceAdded` and `geofenceRemoved` events.** The set of armed fences now
+  reports its own changes, for a host driven by `events()` rather than by the
+  return value of each call. `geofenceAdded` carries the fence **as armed** —
+  the clamped radius, not necessarily the requested one — and is emitted after
+  CoreLocation acknowledges the region, so `getGeofences()` already sees it.
+  `geofenceRemoved` is one per fence, so `removeAllGeofences()` emits several,
+  and removing an unknown identifier emits nothing, matching its `false`
+  return.
+
+### Fixed
+
+- **`getCurrentLocation()` reported every failure as a timeout.** All four
+  causes — the timeout itself, a capture already in flight, the circuit opened
+  by three consecutive failures, and a fix refused at the mapping boundary —
+  arrived as `ErrorCode.fixTimeout`, so the only way to tell them apart was to
+  parse the message. The name reads "transient, retry later" and three of the
+  four are nothing of the kind: retrying a busy capture collides with the one
+  in flight, and retrying into an open circuit fails instantly until
+  authorization, location services or a session start closes it. Three codes
+  join `fixTimeout`, which keeps its exact meaning: `oneShotBusy`,
+  `oneShotCircuitOpen` and `fixRejected`. Messages are unchanged.
+
+---
+
 ## 1.0.0
 
 ### Licensing
@@ -305,14 +366,6 @@ What shipped at the time carried the old ones.
 
 ### Added
 
-- **`geofenceAdded` and `geofenceRemoved` events.** The set of armed fences now
-  reports its own changes, for a host driven by `events()` rather than by the
-  return value of each call. `geofenceAdded` carries the fence **as armed** —
-  the clamped radius, not necessarily the requested one — and is emitted after
-  CoreLocation acknowledges the region, so `getGeofences()` already sees it.
-  `geofenceRemoved` is one per fence, so `removeAllGeofences()` emits several,
-  and removing an unknown identifier emits nothing, matching its `false`
-  return.
 - **Geofences.** Circular regions under your own identifier, independent of
   tracking: a fence needs `ready()` and location authorization, fires with no
   session open, keeps firing after `stop()`, and survives termination and
@@ -441,16 +494,6 @@ What shipped at the time carried the old ones.
 
 ### Fixed
 
-- **`getCurrentLocation()` reported every failure as a timeout.** All four
-  causes — the timeout itself, a capture already in flight, the circuit opened
-  by three consecutive failures, and a fix refused at the mapping boundary —
-  arrived as `ErrorCode.fixTimeout`, so the only way to tell them apart was to
-  parse the message. The name reads "transient, retry later" and three of the
-  four are nothing of the kind: retrying a busy capture collides with the one
-  in flight, and retrying into an open circuit fails instantly until
-  authorization, location services or a session start closes it. Three codes
-  join `fixTimeout`, which keeps its exact meaning: `oneShotBusy`,
-  `oneShotCircuitOpen` and `fixRejected`. Messages are unchanged.
 - **The accelerometer veto measured a single instant, not the interval.**
   `sensors.useAccelerometerVeto` sampled one accelerometer reading per fix and
   treated it as a mean over the time since the last stored point. A carried
@@ -475,14 +518,6 @@ What shipped at the time carried the old ones.
   already been torn down.
 
 ### Changed — action required
-
-- **`getCurrentLocation(feedIngestor:)` now defaults to `true`.** The one-shot
-  fix is judged by the pipeline and stored as a point on the session that is
-  recording, where it previously came back and touched nothing. A screen that
-  only wants to read the position — a map centre, an address lookup — must now
-  pass `feedIngestor: false`, or it will add a point to the user's track every
-  time it opens. With no session open the flag makes no difference. Neither
-  setting bypasses the gates: a fed fix cannot inject an unvalidated point.
 
 - **`motion.stopTimeoutSec` is now `motion.stopTimeoutMin`**, stated in minutes.
   The old name said seconds while the value it described was a stop timeout

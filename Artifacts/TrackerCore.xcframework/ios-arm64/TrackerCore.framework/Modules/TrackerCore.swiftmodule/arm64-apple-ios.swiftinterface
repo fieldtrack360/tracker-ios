@@ -8,6 +8,7 @@ import CoreMotion
 import CryptoKit
 import Darwin
 import Foundation
+import Network
 import Swift
 import TrackerGeo
 import UIKit
@@ -100,7 +101,9 @@ public struct ProviderState : Swift.Sendable, Swift.Equatable {
   public let significantLocationChangeAvailable: Swift.Bool
   public let regionMonitoringAvailable: Swift.Bool
   public let lowPowerMode: Swift.Bool
-  public init(locationServicesEnabled: Swift.Bool = false, authorization: TrackerCore.AuthorizationTier = .none, accuracyAuthorization: TrackerCore.LocationAccuracy = .reduced, significantLocationChangeAvailable: Swift.Bool = false, regionMonitoringAvailable: Swift.Bool = false, lowPowerMode: Swift.Bool = false)
+  public let authorizationStatusCode: Swift.Int
+  public let airplaneMode: Swift.Bool
+  public init(locationServicesEnabled: Swift.Bool = false, authorization: TrackerCore.AuthorizationTier = .none, accuracyAuthorization: TrackerCore.LocationAccuracy = .reduced, significantLocationChangeAvailable: Swift.Bool = false, regionMonitoringAvailable: Swift.Bool = false, lowPowerMode: Swift.Bool = false, authorizationStatusCode: Swift.Int = 0, airplaneMode: Swift.Bool = false)
   public static func == (a: TrackerCore.ProviderState, b: TrackerCore.ProviderState) -> Swift.Bool
 }
 public enum PowerSource : Swift.String, Swift.Sendable {

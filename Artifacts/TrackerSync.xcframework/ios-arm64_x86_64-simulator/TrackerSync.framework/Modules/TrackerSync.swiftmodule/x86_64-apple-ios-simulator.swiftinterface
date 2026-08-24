@@ -15,6 +15,7 @@ public struct SyncConfig : Swift.Sendable, Swift.Equatable, Swift.Codable {
   public var url: Foundation.URL
   public var method: Swift.String
   public var headers: [Swift.String : Swift.String]
+  public var extraParams: [Swift.String : TrackerSync.SyncValue]
   public var autoSync: Swift.Bool
   public var batchSize: Swift.Int
   public var requiresNetworkConnectivity: Swift.Bool
@@ -55,8 +56,32 @@ public enum SyncEvent : Swift.Sendable {
   case retryScheduled(afterSec: Swift.Double, reason: Swift.String)
   case authExpired
 }
+public enum SyncValue : Swift.Codable, Swift.Sendable, Swift.Equatable {
+  case string(Swift.String)
+  case int(Swift.Int)
+  case double(Swift.Double)
+  case bool(Swift.Bool)
+  case null
+  case array([TrackerSync.SyncValue])
+  case object([Swift.String : TrackerSync.SyncValue])
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+  public static func == (a: TrackerSync.SyncValue, b: TrackerSync.SyncValue) -> Swift.Bool
+}
+public struct SyncProvider : Swift.Codable, Swift.Sendable, Swift.Equatable {
+  public let network: Swift.Bool
+  public let gps: Swift.Bool
+  public let enabled: Swift.Bool
+  public let status: Swift.Int
+  public let accuracyAuthorization: Swift.Int
+  public let airplane: Swift.Bool
+  public static func == (a: TrackerSync.SyncProvider, b: TrackerSync.SyncProvider) -> Swift.Bool
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
 public struct SyncPayload : Swift.Codable, Swift.Sendable {
   public let location: [TrackerSync.SyncPoint]
+  public let extraParams: [Swift.String : TrackerSync.SyncValue]
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -68,7 +93,7 @@ public struct SyncPoint : Swift.Codable, Swift.Sendable {
   public let longitude: Swift.Double
   public let accuracyM: Swift.Float
   public let movementSpeedMps: Swift.Float
-  public let provider: Swift.String
+  public let provider: TrackerSync.SyncProvider
   public let hasSpeed: Swift.Bool
   public let hasBearing: Swift.Bool
   public let timezone: Swift.String
@@ -77,6 +102,7 @@ public struct SyncPoint : Swift.Codable, Swift.Sendable {
   public let detectedActivityStartTimeMs: Swift.Int64
   public let batteryPercentage: Swift.String?
   public let isShowPin: Swift.String
+  public let isCharging: Swift.Bool?
   public let isMock: Swift.Bool
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
