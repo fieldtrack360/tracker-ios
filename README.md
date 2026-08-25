@@ -32,7 +32,7 @@ https://github.com/fieldtrack360/tracker-ios
 Or in a `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/fieldtrack360/tracker-ios", from: "1.0.1")
+.package(url: "https://github.com/fieldtrack360/tracker-ios", from: "1.0.2")
 ```
 
 Add only the products you need. Because these are binary targets, each product
@@ -781,6 +781,25 @@ func configureSync(endpoint: URL, token: String) async {
     await Tracker.shared.setSyncTrigger(SyncEngine.shared.healthLoopTrigger())
 }
 ```
+
+`configure` installs the rest of the triggers itself. Since 1.0.2 that includes
+reachability — the queue drains the moment a route to the server exists again,
+rather than waiting out a backoff step the device climbed while it had no way to
+succeed — and one guarded drain per `configure`, which is what empties a queue
+left behind by a force-kill when the app is reopened without a run being started.
+
+| Trigger | Covers | Wired by |
+|---|---|---|
+| `autoSync` | a point was accepted | `configure` |
+| the health loop | rows queued, no new point coming | `setSyncTrigger`, **yours to call** |
+| `BGProcessingTask` | retry after failure, and after termination | `configure` |
+| reachability | offline, then a route again | `configure` — 1.0.2 |
+| the launch drain | reopened with a full queue | `configure` — 1.0.2 |
+
+Neither of the two new ones is gated on `autoSync`: that flag decides whether a
+*point* triggers an upload, and rows stranded by a termination are not a
+schedule. Both stop on a 401, so a credential the server has already rejected is
+not re-presented the next time the device finds Wi-Fi.
 
 Uploading is not tracking: no failure here stops capture or closes a session.
 The single exception is opt-in and off by default —

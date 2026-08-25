@@ -4,6 +4,45 @@ All notable changes to the Tracker iOS SDK. Newest first.
 
 ---
 
+## 1.0.2
+
+The uploader stops waiting. A queue that could not go out now goes out when the
+network comes back and when the app is reopened, instead of when something
+happens to ask it.
+
+### Added
+
+- **The queue drains when the link returns.** `SyncEngine` watches the network
+  path and drains on the offline→online transition. A device that spent an hour
+  underground previously walked into Wi-Fi and then waited out whatever backoff
+  step it had climbed — up to the thirty-minute ceiling — with a working
+  connection sitting idle. It fires on the transition and not on every path
+  update, because a phone handing between cells reports a satisfied path
+  repeatedly and draining on each would be a request storm.
+- **The queue drains at configuration time, once, if rows are already waiting.**
+  This closes the case none of the other triggers covered: a process force-killed
+  or evicted with a full queue comes back with nothing to wake it. `autoSync`
+  needs a *new* accepted point, the health loop only runs inside a session,
+  reachability needs a transition and a launch that is already online is not one,
+  and the background task runs when iOS decides. A user reopening the app on
+  Wi-Fi without starting a run would sit on the backlog indefinitely. Guarded on
+  the pending count, so an idle launch costs one local read and no request.
+
+Neither is gated on `SyncConfig.autoSync`. That flag decides whether a *point*
+triggers an upload; a host that turned it off to batch on its own schedule still
+configured an endpoint, and rows stranded by a termination are not a schedule.
+Both stop on a 401 along with everything else, so a credential the server has
+already rejected is not re-presented the next time the device finds a network.
+
+### Notes
+
+- No API changed. Both triggers are installed by `configure`, which hosts already
+  call; nothing new needs wiring and nothing existing needs revisiting.
+- `TrackerSync` now links `Network.framework`. It is a system framework and needs
+  no entitlement, no capability and no `Info.plist` key.
+
+---
+
 ## 1.0.1
 
 The upload payload gains the fields a cross-platform backend needs, and three
