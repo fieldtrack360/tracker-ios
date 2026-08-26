@@ -10,7 +10,7 @@
 		</data>
 		<key>ios-arm64/TrackerSync.framework/Info.plist</key>
 		<data>
-		tdPGQ+Rgu+ty8KmvjefZplYhH2w=
+		xhR5AmDIqGrxmQ2R/kbXPc/RAc0=
 		</data>
 		<key>ios-arm64/TrackerSync.framework/Modules/TrackerSync.swiftmodule/arm64-apple-ios.swiftinterface</key>
 		<data>
@@ -34,7 +34,7 @@
 		</data>
 		<key>ios-arm64_x86_64-simulator/TrackerSync.framework/Info.plist</key>
 		<data>
-		SDstpvGbnu4qmGNwi2yadDiuzKQ=
+		c1O/8pLFapQu74s5MGXByQz+UR4=
 		</data>
 		<key>ios-arm64_x86_64-simulator/TrackerSync.framework/Modules/TrackerSync.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<data>
@@ -54,11 +54,11 @@
 		</data>
 		<key>ios-arm64_x86_64-simulator/TrackerSync.framework/TrackerSync</key>
 		<data>
-		Bpclk+CUseqBFjWtaRl96hGDgOk=
+		CMNSi1uSfSPdlEAYg3Blrj243Lw=
 		</data>
 		<key>ios-arm64_x86_64-simulator/TrackerSync.framework/_CodeSignature/CodeResources</key>
 		<data>
-		x87AxarMzT0a5DtNbfTEfv+KhgE=
+		PwmadKnvc0sI1ZnQI+NlV22f0Q8=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -74,7 +74,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			8qmzOANXqC865rLjukPw87m4wc7r1ys4FnBqsP+QjUw=
+			SeqdIGeSoxleZR3W+PH6gAt1OK/3GevPG4jDI8qTaeg=
 			</data>
 		</dict>
 		<key>ios-arm64/TrackerSync.framework/Modules/TrackerSync.swiftmodule/arm64-apple-ios.swiftinterface</key>
@@ -116,7 +116,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			nA1nfL9YYUUehgR8p/ZGeP3egNtoqsyIDROLrTDjg5Y=
+			inBF9gE6tRPsgQETeDfq/gtUGY/qEYKTqLhrMlFBITU=
 			</data>
 		</dict>
 		<key>ios-arm64_x86_64-simulator/TrackerSync.framework/Modules/TrackerSync.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
@@ -151,14 +151,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			F8uOU9jMtwjzDSLe5XS1CMpjM7vkuWBJ6UQkvRBBHYk=
+			mkL8W9kjm7F+vCngjLJXQHCN/leEGtiH+q7Fbac5exQ=
 			</data>
 		</dict>
 		<key>ios-arm64_x86_64-simulator/TrackerSync.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			3/ORsAjiyxO0WxpJTd39oosN5Cvo+dK1fw+Hp4qB10E=
+			h+pFLMrX5kH9VH7lIlrEMQ2bHnvwkwR77nvikNqosZc=
 			</data>
 		</dict>
 	</dict>

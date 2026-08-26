@@ -10,7 +10,7 @@
 		</data>
 		<key>ios-arm64/TrackerGeo.framework/Info.plist</key>
 		<data>
-		U7MeypTFO8PLYltmBOet7lMgCx4=
+		TOMVMIGA+odaZ4tgmUjIwKyMy2M=
 		</data>
 		<key>ios-arm64/TrackerGeo.framework/Modules/TrackerGeo.swiftmodule/arm64-apple-ios.swiftinterface</key>
 		<data>
@@ -34,7 +34,7 @@
 		</data>
 		<key>ios-arm64_x86_64-simulator/TrackerGeo.framework/Info.plist</key>
 		<data>
-		hZSFmHleaLFoOZD83Y3cyK8PqAU=
+		SBzZsJcxosJcE7r9TeZvP1qejto=
 		</data>
 		<key>ios-arm64_x86_64-simulator/TrackerGeo.framework/Modules/TrackerGeo.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<data>
@@ -54,11 +54,11 @@
 		</data>
 		<key>ios-arm64_x86_64-simulator/TrackerGeo.framework/TrackerGeo</key>
 		<data>
-		S/Q0O3/jiq3Khs7dw6vR8nzL8Ew=
+		Up7nwMFL7uz6krtoCJheGdRJyW0=
 		</data>
 		<key>ios-arm64_x86_64-simulator/TrackerGeo.framework/_CodeSignature/CodeResources</key>
 		<data>
-		EK5IS68yspOv5xWMeLgqcJ6VUr4=
+		MzMx5GQ/mRiw7t2CS5TW5dOU8Jc=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -74,7 +74,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			bGQCBL9myAG7TEm3VJfOmDZszF1rHGa6//2/Or8jURc=
+			1IKubOuCQcAyskUKGSH8W1jTEnKgU8zApJuUTcWPZ2M=
 			</data>
 		</dict>
 		<key>ios-arm64/TrackerGeo.framework/Modules/TrackerGeo.swiftmodule/arm64-apple-ios.swiftinterface</key>
@@ -116,7 +116,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			l+6isQ9kJdRoQWGpeaDiaQLHHUalXC+Yup0VQYl+jZg=
+			Hi7F+Tg92utMMg4wP5BdSBNA/TJ3ZfILR5P+8DQoiAE=
 			</data>
 		</dict>
 		<key>ios-arm64_x86_64-simulator/TrackerGeo.framework/Modules/TrackerGeo.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
@@ -151,14 +151,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			pzDUC7roeRB/emrhEOCeYgFwM8FoNNvJxE27f0N4W9M=
+			+zcecUkg9UGSwC3fu27uB++8mTQtBlQO/QZwmlfMdMQ=
 			</data>
 		</dict>
 		<key>ios-arm64_x86_64-simulator/TrackerGeo.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			fI/IEefHN10/JnMpPrl0EeCzaNrQY5QG6vkKyIzM9QQ=
+			8Ng344akVvrGJZDHlysAdhVMny3RNt7MZ265Sr5MMuM=
 			</data>
 		</dict>
 	</dict>

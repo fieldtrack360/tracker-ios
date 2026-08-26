@@ -4,6 +4,51 @@ All notable changes to the Tracker iOS SDK. Newest first.
 
 ---
 
+## 1.0.4
+
+Tracking survives the switches the user is most likely to touch. Turning Location
+Services or the location permission off and on again during a run no longer ends
+the run, and an app that has never been asked to track no longer holds a location
+service open at launch.
+
+### Fixed
+
+- **A run kept recording after Location Services or the permission came back.**
+  CoreLocation ends the client when either goes away and does not revive it when
+  they return; `startUpdatingLocation()` has to be issued afresh. The recovery
+  path fired correctly and then returned without doing so, because a running
+  ingestor was read as "nothing to do". It is a reason not to re-enter the
+  *session* — restarting the ingestor mid-run reloads the filter state, drops
+  `past` and resets the turn detector on a track that was recording perfectly —
+  and it was never a reason to leave the stream shut. The session stayed open and
+  `isTracking` stayed true for a stream that would not deliver another fix, and
+  only a manual stop and start recovered it. The stall was eventually caught by
+  the dead-tracker watchdog, thirty to sixty minutes later, which is a backstop
+  and not a fix.
+
+  Recovering the stream needs to know what the tracker *wants*, not what it is
+  doing: `isStreaming == false` means both "the OS took this away" and "we
+  stopped it on purpose because the device is stationary in `.motionOnly`", and
+  reopening the second is as wrong as leaving the first shut. Intent is now
+  tracked separately. The re-open also clears the streaming flag rather than
+  testing it — a Settings toggle while the app is suspended delivers no callback
+  at all to a process that was not running, so the flag can describe a client
+  that is already dead.
+
+- **The location indicator appeared at launch for a host that never called
+  `start()`.** Significant-location monitoring was armed from `ready()`,
+  unconditionally, before the open session it exists to recover could be read.
+  It arms from the branch that found one. That ordering also meant a failed read
+  left monitoring on with nothing able to turn it off; there is now nothing armed
+  to leak.
+
+### Changed
+
+- Nothing in the public interface. Both fixes are behavioural and no host code
+  changes.
+
+---
+
 ## 1.0.2
 
 The uploader stops waiting. A queue that could not go out now goes out when the
