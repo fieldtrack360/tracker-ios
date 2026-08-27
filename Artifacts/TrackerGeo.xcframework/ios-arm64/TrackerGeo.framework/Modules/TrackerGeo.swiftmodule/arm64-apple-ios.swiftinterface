@@ -82,6 +82,7 @@ public enum Reasons {
   public static let walkArrival: Swift.String
   public static let heartbeat: Swift.String
   public static let heuristicGate: Swift.String
+  public static let cornerAnchor: Swift.String
   public static let originSet: Swift.String
   public static let departureHeld: Swift.String
   public static let driftSuppressed: Swift.String

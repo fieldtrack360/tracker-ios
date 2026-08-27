@@ -4,6 +4,103 @@ All notable changes to the Tracker iOS SDK. Newest first.
 
 ---
 
+## 1.0.5
+
+Corners survive the drawing. Three of the four turn-fidelity layers were either
+absent or set to a threshold that could not see a bend, so a junction reached the
+map as a straight line between the approach and the exit. Alongside them: cadence
+now follows speed rather than a fixed clock, leaving a stop no longer waits for a
+fix, and the geofence API gained the pieces a host actually reaches for.
+
+### Added
+
+- **Corner anchor (EC-45e).** Bearing-change capture compares a fix against the
+  last *stored* point, so it looks backwards — and at a corner's apex only half
+  the turn is behind you. A 90 degree junction sampled on approach, at the apex
+  and on the exit offers the apex as a 45 degree change, under any threshold set
+  to recognise a junction. It was dropped, the exit was stored on the full 90, and
+  the line ran straight across the corner with the one vertex that described it
+  discarded a fix earlier. The rejection is now held for one fix and restored as
+  `Corner Anchor` if the path bent across it. Only the heuristic gate's rejections
+  are ever reconsidered — impossible speed, poor accuracy and the three-sigma
+  outlier test are untouched, because a corner is a reason to keep an unremarkable
+  fix and never a reason to admit a bad one. `motion.cornerAnchorCapture`.
+
+- **Gyroscope turn prediction (EC-45d).** The turn detector is reactive by
+  construction: it compares one fix's heading against the last, so at a twelve
+  second cadence the earliest it can know a turn began is twelve seconds after it
+  began. Yaw rate rises the moment the wheel turns, so the burst now runs into the
+  corner rather than out of it. Registered only while fixes report vehicular speed
+  and released a minute after they stop, which is what keeps a phone swinging in a
+  walker's hand from ever reaching the gate. `sensors.useGyroTurnPrediction`.
+
+- **A physical wake out of stationary (EC-132).** Leaving a stop previously waited
+  for a fix, the region, or an activity label — the first needs the stream still
+  running, the second needs 150 metres, and the third is the least trustworthy
+  signal in the system. The pedometer now says so first, and where it cannot serve
+  — hardware without step counting, or a user who declined Motion and Fitness —
+  an accelerometer fallback does. Armed only while parked, one-shot, and neither
+  survives termination: the region and significant-location monitoring remain the
+  paths that relaunch a dead process. `sensors.useSignificantMotion`.
+
+- **Speed-adaptive cadence.** `intervalMs` selects only the base tier, so lowering
+  it below `vehicularIntervalMs` sampled fastest while parked and slowest while
+  driving — silently, because nothing compared the two. The new rule holds spacing
+  on the ground instead of in time: roughly 25 metres apart at any speed, between
+  a floor and a ceiling. Configuration is now refused outright when the ladder
+  inverts. `geolocation.speedAdaptiveCadence`.
+
+- **A coarser accuracy while parked.** The one setting on iOS that reduces GNSS
+  power. Every cadence number is a software gate in front of the ingestor, so the
+  chip runs at whatever accuracy was asked for however few fixes are forwarded.
+  Off by default: a coarser fix while stationary weakens both the anchor-radius
+  net and the pipeline's judgement of drift. `geolocation.stationaryAccuracy`.
+
+- **The geofence API a host reaches for.** Per-fence event names carried back on
+  every crossing, inclusive time windows on both the history read and the delete,
+  a count returned from the delete, a single-fence read, and typed error codes so
+  a cap can be pruned rather than backed off from.
+
+- **A configurable stationary fence.** Its identifier and its exit label are now
+  the host's. The identifier must carry the `tracker-stationary` prefix, which is
+  the only thing that lets a region armed under a previous name be recognised and
+  retired rather than stranded against the app-wide cap of twenty for the life of
+  the install.
+
+- **The wake fence is armed on the first accepted fix**, not on the first
+  stationary transition five minutes later. Until then the only wake path was
+  significant-location monitoring, which is roughly 500 metres and several
+  minutes — a user who parks, is terminated, and walks 200 metres stays inside
+  that threshold the whole way.
+
+### Changed
+
+- **`bearingChangeCaptureDeg` is 30 degrees, from 40.** Forty is a junction
+  threshold where this wants a bend one: because the comparison runs against the
+  last stored heading, a long curve turning 35 degrees between stored points never
+  crossed it and the drawn line kept only the straight legs either side. The
+  engine's own floors — distance, speed, accuracy and the step veto — are what
+  keep the lower value from firing on noise.
+
+- **A region exit now resumes the session before it tells the motion machine.**
+  iOS relaunches a terminated app to deliver one, so the callback routinely runs
+  in a process whose session has not been restored — and every event is dropped
+  while nothing is running, which spent the wake-up and discarded the evidence
+  that earned it.
+
+### Notes for upgraders
+
+Four defaults changed behaviour rather than surface: bearing capture at 30
+degrees, corner anchors on, gyroscope prediction on, and the stationary wake on.
+Tracks will carry more points through curves and junctions, which is the point.
+Every one of them has a flag, and setting `cornerAnchorCapture` to false with
+`bearingChangeCaptureDeg` at 40 restores the previous drawing exactly.
+
+Migration v9 widens the geofence sidecar and adds a label column to the crossing
+history. Existing dwell delays and crossings carry across.
+
+---
+
 ## 1.0.4
 
 Tracking survives the switches the user is most likely to touch. Turning Location

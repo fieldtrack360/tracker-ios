@@ -166,6 +166,9 @@ public enum ErrorCode : Swift.String, Swift.Sendable {
   case invalidConfig
   case motionDetectionDegraded
   case snapUnavailable
+  case geofenceLimitReached
+  case geofenceRegistrationFailed
+  case geofenceRemovalFailed
   case internalError
   case licenseMissing
   case licenseInvalid
@@ -188,8 +191,10 @@ public struct Geofence : Swift.Sendable, Swift.Equatable, Swift.Identifiable {
   public let notifyOnEntry: Swift.Bool
   public let notifyOnExit: Swift.Bool
   public let dwellAfterMs: Swift.Int64?
+  public let onEnterEvent: Swift.String?
+  public let onExitEvent: Swift.String?
   #if compiler(>=5.3) && $NonescapableTypes
-  public init(id: Swift.String, latitude: Swift.Double, longitude: Swift.Double, radiusM: Swift.Double, notifyOnEntry: Swift.Bool = true, notifyOnExit: Swift.Bool = true, dwellAfterMs: Swift.Int64? = nil)
+  public init(id: Swift.String, latitude: Swift.Double, longitude: Swift.Double, radiusM: Swift.Double, notifyOnEntry: Swift.Bool = true, notifyOnExit: Swift.Bool = true, dwellAfterMs: Swift.Int64? = nil, onEnterEvent: Swift.String? = nil, onExitEvent: Swift.String? = nil)
   #endif
   public var centre: TrackerGeo.GeoPoint {
     get
@@ -217,7 +222,10 @@ public struct GeofenceEvent : Swift.Sendable, Swift.Equatable, Swift.Identifiabl
   public let latitude: Swift.Double
   public let longitude: Swift.Double
   public let radiusM: Swift.Double
-  public init(id: Swift.Int64 = 0, geofenceID: Swift.String, transition: TrackerCore.GeofenceTransition, timeMs: Swift.Int64, latitude: Swift.Double, longitude: Swift.Double, radiusM: Swift.Double)
+  public let eventName: Swift.String?
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init(id: Swift.Int64 = 0, geofenceID: Swift.String, transition: TrackerCore.GeofenceTransition, timeMs: Swift.Int64, latitude: Swift.Double, longitude: Swift.Double, radiusM: Swift.Double, eventName: Swift.String? = nil)
+  #endif
   public static func == (a: TrackerCore.GeofenceEvent, b: TrackerCore.GeofenceEvent) -> Swift.Bool
   public typealias ID = Swift.Int64
 }
@@ -383,15 +391,19 @@ public enum TrackerResult<Success> : Swift.Sendable where Success : Swift.Sendab
   final public func changePace(isMoving: Swift.Bool) async -> TrackerCore.TrackerResult<Swift.Void>
   final public func addGeofence(_ fence: TrackerCore.Geofence) async -> TrackerCore.TrackerResult<TrackerCore.Geofence>
   final public func getGeofences() async -> [TrackerCore.Geofence]
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func getGeofence(id: Swift.String) async -> TrackerCore.Geofence?
+  #endif
   @discardableResult
   final public func removeGeofence(id: Swift.String) async -> Swift.Bool
   @discardableResult
   final public func removeAllGeofences() async -> Swift.Int
   #if compiler(>=5.3) && $NonescapableTypes
-  final public func getGeofenceEvents(geofenceID: Swift.String? = nil, limit: Swift.Int = 200, offset: Swift.Int = 0) async throws -> [TrackerCore.GeofenceEvent]
+  final public func getGeofenceEvents(geofenceID: Swift.String? = nil, fromMs: Swift.Int64? = nil, toMs: Swift.Int64? = nil, limit: Swift.Int = 200, offset: Swift.Int = 0) async throws -> [TrackerCore.GeofenceEvent]
   #endif
   #if compiler(>=5.3) && $NonescapableTypes
-  final public func deleteGeofenceEvents(geofenceID: Swift.String? = nil) async throws
+  @discardableResult
+  final public func deleteGeofenceEvents(geofenceID: Swift.String? = nil, fromMs: Swift.Int64? = nil, toMs: Swift.Int64? = nil) async throws -> Swift.Int
   #endif
   final public func setRoadSnapProvider(_ provider: any TrackerGeo.RoadSnapProvider)
   final public func buildTrack(_ query: TrackerCore.PointQuery = PointQuery(), options: TrackerGeo.TrackOptions = TrackOptions()) async throws -> TrackerGeo.Track
@@ -441,6 +453,7 @@ public struct TrackerConfig : Swift.Sendable, Swift.Codable, Swift.Equatable {
 public struct GeolocationConfig : Swift.Sendable, Swift.Codable, Swift.Equatable {
   public var trackingMode: TrackerCore.TrackingMode
   public var desiredAccuracy: TrackerCore.DesiredAccuracy
+  public var stationaryAccuracy: TrackerCore.DesiredAccuracy?
   public var accuracy: TrackerCore.AccuracyConfig
   public var intervalMs: Swift.Int64
   public var vehicularIntervalMs: Swift.Int64
@@ -449,6 +462,10 @@ public struct GeolocationConfig : Swift.Sendable, Swift.Codable, Swift.Equatable
   public var turnBurstIntervalMs: Swift.Int64
   public var navigationMode: Swift.Bool
   public var navigationIntervalMs: Swift.Int64
+  public var speedAdaptiveCadence: Swift.Bool
+  public var targetSpacingM: Swift.Double
+  public var minIntervalMs: Swift.Int64
+  public var maxIntervalMs: Swift.Int64
   public var deliveryStalenessMs: Swift.Int64
   public var oneShotTimeoutMs: Swift.Int64
   public var mockLocationPolicy: TrackerGeo.MockPolicy
@@ -463,9 +480,13 @@ public struct MotionConfig : Swift.Sendable, Swift.Codable, Swift.Equatable {
   public var snapshotConfidenceMin: Swift.Int
   public var stopTimeoutMin: Swift.Int
   public var stationaryRadiusM: Swift.Double
+  public var stationaryGeofenceID: Swift.String
+  public var stationaryGeofenceOnExitEvent: Swift.String
+  public static let reservedGeofencePrefix: Swift.String
   public var motionTriggerDelaySec: Swift.Int
   public var heartbeatIntervalSec: Swift.Int
   public var bearingChangeCaptureDeg: Swift.Int
+  public var cornerAnchorCapture: Swift.Bool
   public var stillConfidenceMin: Swift.Int
   public var stopOnStationary: Swift.Bool
   public var disableStopDetection: Swift.Bool
@@ -504,6 +525,11 @@ public struct SensorConfig : Swift.Sendable, Swift.Codable, Swift.Equatable {
   public var useStepCorroboration: Swift.Bool
   public var useSignificantLocationChange: Swift.Bool
   public var useStationaryFence: Swift.Bool
+  public var useSignificantMotion: Swift.Bool
+  public var useGyroTurnPrediction: Swift.Bool
+  public var significantMotionSteps: Swift.Int
+  public var significantMotionAccelG: Swift.Double
+  public var significantMotionAccelSustainMs: Swift.Int64
   public var useAccelerometerVeto: Swift.Bool
   public var useBarometer: Swift.Bool
   public var activityRecognitionIntervalMs: Swift.Int64
@@ -576,6 +602,19 @@ extension TrackerCore.TrackerConfig {
     final public func recoveryTrustMeters(_ value: Swift.Float) -> TrackerCore.TrackerConfig.Builder
     final public func activityRecognition(_ value: Swift.Bool) -> TrackerCore.TrackerConfig.Builder
     final public func stopTimeoutMin(_ value: Swift.Int) -> TrackerCore.TrackerConfig.Builder
+    final public func stationaryGeofenceID(_ value: Swift.String) -> TrackerCore.TrackerConfig.Builder
+    final public func stationaryGeofenceOnExitEvent(_ value: Swift.String) -> TrackerCore.TrackerConfig.Builder
+    #if compiler(>=5.3) && $NonescapableTypes
+    final public func stationaryAccuracy(_ value: TrackerCore.DesiredAccuracy?) -> TrackerCore.TrackerConfig.Builder
+    #endif
+    final public func speedAdaptiveCadence(_ value: Swift.Bool) -> TrackerCore.TrackerConfig.Builder
+    final public func targetSpacingM(_ value: Swift.Double) -> TrackerCore.TrackerConfig.Builder
+    final public func minIntervalMs(_ value: Swift.Int64) -> TrackerCore.TrackerConfig.Builder
+    final public func maxIntervalMs(_ value: Swift.Int64) -> TrackerCore.TrackerConfig.Builder
+    final public func useSignificantMotion(_ value: Swift.Bool) -> TrackerCore.TrackerConfig.Builder
+    final public func significantMotionSteps(_ value: Swift.Int) -> TrackerCore.TrackerConfig.Builder
+    final public func cornerAnchorCapture(_ value: Swift.Bool) -> TrackerCore.TrackerConfig.Builder
+    final public func useGyroTurnPrediction(_ value: Swift.Bool) -> TrackerCore.TrackerConfig.Builder
     final public func stationaryRadiusM(_ value: Swift.Double) -> TrackerCore.TrackerConfig.Builder
     final public func motionTriggerDelaySec(_ value: Swift.Int) -> TrackerCore.TrackerConfig.Builder
     final public func stopOnStationary(_ value: Swift.Bool) -> TrackerCore.TrackerConfig.Builder
